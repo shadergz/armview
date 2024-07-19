@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <array>
-
 #include <iostream>
 #include <vector>
 
@@ -11,34 +10,26 @@
 using u8 = std::uint8_t;
 using i32 = std::int32_t;
 using u32 = std::uint32_t;
+
 void printUsage(auto self) {
-
     fmt::print("Usage: {} <PC> <thumb/a32/a64> <Instructions (hexadecimal)>\n", self);
-
     std::exit(EXIT_FAILURE);
 }
 template <typename ...Args>
 void clash(auto self, const std::string& format, Args... args) {
-
     fmt::print(fmt::runtime(format), std::forward<Args>(args)...);
-
     printUsage(self);
 }
 
 auto collectAllInstructions(const i32 argc, char** argv) {
     std::vector<u32> collection;
     for (i32 index{3}; index < argc; ++index) {
-
         std::string_view hex{argv[index]};
-
         if (!hex.starts_with("0x"))
             clash(argv[0], "Invalid instruction format {}\n", hex);
-
         hex.remove_prefix(2);
-
         if (hex.size() > 8)
             clash(argv[0], "Invalid instruction size {}\n", hex);
-
         auto instructionBytes{strtoul(hex.data(), nullptr, 16)};
         collection.emplace_back(instructionBytes);
     }
@@ -60,7 +51,6 @@ std::string disassembleA32(const bool isThumb, const u32 pc, const u32 instructi
         auto sizeUsed{LLVMDisasmInstruction(ctx, macro.data(), size, pc, buffer.data(), buffer.size())};
         result = sizeUsed > 0 ? buffer.data() : "<invalid>";
         if (!sizeUsed) {
-
             if (isThumb)
                 sizeUsed = 2;
             else
@@ -80,17 +70,13 @@ std::string disassembleA64(const u32 pc, const u32 instruction) {
     LLVMSetDisasmOptions(ctx, LLVMDisassembler_Option_AsmPrinterVariant);
 
     std::array<u8, 0x4> macro{};
-
     std::memcpy(macro.data(), &instruction, macro.size());
-
     if (!LLVMDisasmInstruction(ctx, macro.data(), pc, instruction, buffer.data(), buffer.size())) {
         result = "<invalid>\n";
-
     } else {
         result = buffer.data();
         result += '\n';
     }
-
     LLVMDisasmDispose(ctx);
     return result;
 }
@@ -103,9 +89,7 @@ int main(const i32 argc, char **argv) {
     if (std::string_view{argv[2]} == "thumb") {
         mode = 1;
     } else if (std::string_view{argv[2]} == "a32") {
-
         mode = 2;
-
     } else if (std::string_view{argv[2]} == "a64") {
         mode = 3;
     }
@@ -128,8 +112,6 @@ int main(const i32 argc, char **argv) {
         LLVMInitializeAArch64Disassembler();
     }
 
-
-
     // ReSharper disable once CppTooWideScopeInitStatement
     const auto instructions{collectAllInstructions(argc, argv)};
     for (const auto arm : instructions) {
@@ -150,7 +132,6 @@ int main(const i32 argc, char **argv) {
                 clash(argv[0], "Invalid specified mode {}", mode);
         }
         pc += size;
-
     }
 
     return EXIT_SUCCESS;
